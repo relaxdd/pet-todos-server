@@ -3,19 +3,22 @@ import { join } from 'path'
 import { hideBin } from 'yargs/helpers'
 import { config } from 'dotenv'
 import express from 'express'
-import cors from 'cors'
 import { errors } from 'celebrate'
 import errorHandler from './middlewares/errorHandler'
 import apiRouter from './modules/apiRouter'
 import mysql from 'mysql2'
 import bodyParser from 'body-parser'
+import cookieParser from 'cookie-parser'
+import clientRouter from './modules/clientRouter'
+import cors from 'cors'
+import { DEF_OPTIONS } from './defines'
 
 export const argv = yargs(hideBin(process.argv))
   .options({
-    port: { type: 'number', default: 5000, number: true },
+    port: { type: 'number', default: DEF_OPTIONS.PORT, number: true },
     mode: {
       type: 'string',
-      default: 'development',
+      default: DEF_OPTIONS.ENV,
       string: true,
       choices: ['production', 'development'],
     },
@@ -39,13 +42,14 @@ export const db = mysql.createConnection({
 function main() {
   const app = express()
 
-  // app.use(express.static(process.cwd() + '/public'))
+  app.use(express.static(process.cwd() + '/public'))
   app.use(cors())
-  // app.use(cookieParser())
+  app.use(cookieParser())
   app.use(bodyParser.json())
   app.use('/api', apiRouter)
   app.use(errors())
   app.use(errorHandler)
+  app.use(clientRouter)
 
   app.listen(PORT, () => {
     console.log(`[express]: Server is running at ${PORT} port`)

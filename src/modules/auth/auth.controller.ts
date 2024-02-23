@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from 'express'
 import { LoginSchema, RegisterSchema } from './auth.schemes'
 import UserModel from '../../models/UserModel'
 import bcryptjs from 'bcryptjs'
+import JwtService from '../../services/JwtService'
+import resError from '../../utils/error/resError'
+import { COOKIE_AUTH_KEY } from '../../defines'
 
 class AuthController {
   public static async register(req: Request<never, never, RegisterSchema>, res: Response, next: NextFunction) {
@@ -18,21 +21,35 @@ class AuthController {
       const user = await UserModel.findByLogin(user_login)
 
       if (!user) {
-        const error = 'Пользователь с таким логином не найден'
-        return res.status(400).json({ error })
+        const message = 'Пользователь с таким логином не найден'
+        return resError(res, 400, { message, fields: ['user_login'] })
       }
 
       const verify = await bcryptjs.compare(user_password, user.password)
 
       if (!verify) {
-        const error = 'Введен не верный пароль'
-        return res.status(400).json({ error })
+        const message = 'Введен не верный пароль'
+        return resError(res, 400, { message, fields: ['user_password'] })
       }
 
-      // res.cookie('_auth_mysql_is_ready', user.id)
-      const { password, ...user_dto } = user
+      const { password, ...userDto } = user
+      const jwt = JwtService.sign(userDto)
 
-      return res.json(user_dto)
+      res.cookie(COOKIE_AUTH_KEY, jwt, {
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24 * 7
+      })
+
+      return res.end()
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  public static async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      return res.end()
     } catch (err) {
       return next(err)
     }

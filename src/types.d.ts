@@ -6,6 +6,8 @@ export interface TodoItem {
   created_at: string
 }
 
+export type TodoPayload = Pick<TodoItem, 'user_id' | 'title'>
+
 export interface UserItem {
   id: number,
   login: string,
@@ -13,3 +15,5 @@ export interface UserItem {
   password: string,
   created_at: string
 }
+
+export type UserDto = Omit<UserItem, 'password'>

@@ -8,10 +8,6 @@ const apiRouter = Router()
 apiRouter.use('/auth', authRouter)
 apiRouter.use('/todos', todoRouter)
 
-apiRouter.get('/test', (req, res) => {
-  res.json({ message: 'All is nice!' })
-})
-
 apiRouter.all('*', (req, res, next) => {
   next(new NotFoundError('Неверный адрес api запроса!'))
 })

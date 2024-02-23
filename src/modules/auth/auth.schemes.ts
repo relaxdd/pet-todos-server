@@ -13,7 +13,7 @@ export interface LoginSchema {
 }
 
 const fieldsSchema = {
-  password: Joi.string().min(8).max(24).required(),
+  password: Joi.string().min(6).max(24).required(),
 }
 
 export const registerSchema = Joi.object<RegisterSchema, true>({
@@ -24,6 +24,10 @@ export const registerSchema = Joi.object<RegisterSchema, true>({
 })
 
 export const loginSchema = Joi.object<LoginSchema, true>({
-  user_login: Joi.string().required(),
+  user_login: Joi.string().required().messages({
+    'string.base': `"user_login" должен быть типом "string"`,
+    'string.empty': `"user_login" не может быть пустым полем`,
+    'any.required': `"user_login" обязательное поле для заполнения`
+  }),
   user_password: fieldsSchema.password,
 })

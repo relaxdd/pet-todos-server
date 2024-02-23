@@ -1,23 +1,15 @@
-import { NextFunction, Request, Response } from 'express'
+import { NextFunction, Response } from 'express'
 import TodoModel from '../../models/TodoModel'
-import { ValidateUserId } from './todo.middlewares'
+import { ValidateCreateTodo, ValidateGetOneTodo } from './todo.middlewares'
+import { RequestWithUser } from '../../utils/checkAuth'
+import resError from '../../utils/error/resError'
 
 class TodoController {
-  public static async getAll(
-    req: Request<never, never, ValidateUserId>,
-    res: Response,
-    next: NextFunction
-  ) {
+  public static async getAll(req: RequestWithUser, res: Response, next: NextFunction) {
     try {
-      // const userId = req.cookies?.['_auth_mysql_is_ready']
-      const { userId } = req.query
-
-      if (!userId) {
-        const error = 'Вы не авторизованны'
-        return res.status(401).json({ error })
-      }
-
+      const userId = req.user!.id
       const todos = await TodoModel.loadAll(+userId)
+
       return res.json(todos)
     } catch (err) {
       return next(err)
@@ -25,12 +17,36 @@ class TodoController {
   }
 
   public static async getOne(
-    req: Request<never, never, ValidateUserId>,
+    req: RequestWithUser<Partial<ValidateGetOneTodo>>,
     res: Response,
     next: NextFunction
   ) {
     try {
-      return res.end()
+      const userId = req.user!.id
+      const todoId = req.params.id!
+      const todo = await TodoModel.loadOne(userId, todoId)
+
+      if (!todo) {
+        return resError(res, 404, { message: 'Элемент задачи не найден' })
+      }
+
+      return res.json(todo)
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  public static async addOne(
+    req: RequestWithUser<never, never, ValidateCreateTodo>,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const title = req.body.title
+      const user_id = req.user!.id
+
+      const todo = await TodoModel.createOne({ user_id, title })
+      return res.json(todo)
     } catch (err) {
       return next(err)
     }
