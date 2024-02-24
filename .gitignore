@@ -129,6 +129,7 @@ dist
 # build
 build/
 uploads/
+deploy/
 
 # Editor directories and files
 .vscode/*
