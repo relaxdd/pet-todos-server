@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { LoginSchema, RegisterSchema } from './auth.schemes'
+import { LoginSchema } from './auth.schemes'
 import UserModel from '../../models/UserModel'
 import bcryptjs from 'bcryptjs'
 import JwtService from '../../services/JwtService'
@@ -7,14 +7,6 @@ import resError from '../../utils/error/resError'
 import { COOKIE_AUTH_KEY } from '../../defines'
 
 class AuthController {
-  public static async register(req: Request<never, never, RegisterSchema>, res: Response, next: NextFunction) {
-    try {
-      return res.json(req.body)
-    } catch (err) {
-      return next(err)
-    }
-  }
-
   public static async login(req: Request<never, never, LoginSchema>, res: Response, next: NextFunction) {
     try {
       const { user_password, user_login } = req.body
@@ -41,14 +33,15 @@ class AuthController {
         maxAge: 1000 * 60 * 60 * 24 * 7
       })
 
-      return res.end()
+      return res.json({ message: 'Вы были успешно авторизованы' })
     } catch (err) {
       return next(err)
     }
   }
 
-  public static async logout(req: Request, res: Response, next: NextFunction) {
+  public static async logout(_: Request, res: Response, next: NextFunction) {
     try {
+      res.clearCookie(COOKIE_AUTH_KEY)
       return res.end()
     } catch (err) {
       return next(err)
